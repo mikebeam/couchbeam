@@ -241,7 +241,7 @@ wait_reconnect(#state{parent=Parent,
 seq(Props,#state{owner=Owner,ref=Ref}) ->
   Seq = couchbeam_util:get_value(<<"seq">>, Props),
   put(last_seq, Seq),
-  Owner ! {Ref, {change, {Props}}}.
+  Owner ! {Ref, {change, post_decode( Props )}}.
 
 decode(Data) ->
   jsx:decode(Data,[return_tail,stream]).
@@ -453,10 +453,10 @@ collect_object({_, Event}, {_, NestCount, [{key, Key}, Last|Terms], St}) ->
 collect_object({_, Event}, {_, NestCount, [Last|Terms], St}) ->
     {collect_object, NestCount, [[Event] ++ Last] ++ Terms, St}.
 
-send_change({Props}=Change, #state{owner=Owner, ref=Ref}=St) ->
+send_change({Props}, #state{owner=Owner, ref=Ref}=St) ->
     Seq = couchbeam_util:get_value(<<"seq">>, Props),
     put(last_seq, Seq),
-    Owner ! {Ref, {change, Change}},
+    Owner ! {Ref, {change, post_decode( Props )}},
     maybe_continue_decoding(St).
 
 
